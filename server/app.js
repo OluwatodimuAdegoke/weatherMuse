@@ -161,7 +161,13 @@ const connectData = async () => {
   let tracks = [];
   await getRecommendations(spotifyData).then((data) => {
     data.tracks.forEach((track) => {
-      tracks.push(track.name);
+      tracks.push({
+        title: track.name,
+        artist_name: track.artists[0].name,
+        image_url: track.album.images[0].url,
+        song_uri: track.uri,
+        song_url: track.external_urls.spotify,
+      });
     });
   });
 
@@ -172,10 +178,15 @@ const connectData = async () => {
 app.get("/", async (req, res) => {
   try {
     let value = await connectData();
-    res.send(value);
+    res.status(200).send(value);
   } catch (error) {
     console.error(error);
-    res.status(500).send("An error occurred while getting recommendations");
+    res
+      .status(500)
+      .send(error instanceof Error ? error.message : "Unknown error");
   }
 });
-app.listen(3000);
+
+app.listen(3000, () => {
+  console.log(`Server running at http://localhost:3000...`);
+});

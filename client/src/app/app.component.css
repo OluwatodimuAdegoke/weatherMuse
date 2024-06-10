@@ -1,0 +1,61 @@
+
+    .content {
+        display: flex;
+        flex-direction: column;
+        color: #303f9f;
+        align-items: center;
+        padding: 50px;
+    }
+    button {
+        display: flex;
+      background-color: #3f51b5;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      align-self: center;
+    }
+    button:hover {
+      background-color: #303f9f;
+    }
+    .input{
+      display: flex;
+      flex-direction: row;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+    input{
+      border-radius: 5px;
+    }
+  .track-image {
+    height: 100px;
+    width: 100px;
+    object-fit: contain;
+    border-radius: 20px 20px 20px 20px ;
+  }
+  .track-div {
+    background-color: #f5f5f5;
+    display: flex;
+    flex-direction: row;
+    width: 500px;
+    gap: 10px;
+    border-radius: 20px 20px 20px 20px ;
+  }
+  .track-list{
+    margin-bottom: 20px;
+  }
+  .title{
+    font-size: medium;
+    color: darkgrey;
+    font-weight: bold;
+  }
+  .artists{
+    font-size: small;
+    color: darkgrey;
+    font-weight: normal;
+  }
+  .track-list a {
+    text-decoration: none;
+    color: inherit;
+  }

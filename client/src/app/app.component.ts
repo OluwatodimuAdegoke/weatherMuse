@@ -4,73 +4,70 @@ import { RouterOutlet } from '@angular/router';
 import { Song } from './song';
 import { TracksService } from './tracks.service';
 import { Observable } from 'rxjs';
+import {FormBuilder, FormControl, FormGroup, ReactiveFormsModule} from '@angular/forms';
+
+
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [  CommonModule],
+  imports: [  CommonModule , ReactiveFormsModule],
   template: `
-  <form action="">
-    <button>Search</button>
-  </form>
   <section class="content">
-  <ul>
-  <li *ngFor="let track of trackList"> 
-    <a [href]="track.song_url">
-      <div class="track-div">
-    <img class="track-image" [src]="track.image_url" alt="Image Url" >
-    <h2 class="title">{{track.title}}</h2>
-    <p class="artists">{{track.artist_name}}</p>
+    <div class="input">
+      <!-- <input #cityName type="text" placeholder="Current City" required> -->
+      <button type="submit"  (click)="getTracks()">Click Me</button>
     </div>
+
+  <div *ngFor="let track of trackList" class="track-list"> 
+    <a [href]="track.song_url" >
+        <div class="track-div">
+      <img class="track-image" [src]="track.image_url" alt="Image Url" >
+      <div>
+        <h2 class="title">{{track.title}}</h2>
+        <p class="artists">Artist: {{track.artist_name}}</p>
+      </div>
+      </div>
     </a>
-  </li>
-</ul>
+</div>
+
   </section>
 
  
   `,
-  styles: [`
-    .content {
-      margin: 20px;
-      background-color: #f5f5f5;
-      padding: 20px;
-      border-radius: 5px;
-    }
-    button {
-      background-color: #3f51b5;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #303f9f;
-    }
-  .track-image {
-    height: 200px;
-    width: 200px;
-    object-fit: fill;
-    border-radius: 30px 30px 30px 30px ;
-  }
-  `],
+  styleUrl: "./app.component.css",
 
 })
 export class AppComponent {
 
   trackList: Song[] = [];
+  lat: any;
+  lng: any;
 
   trackService: TracksService = inject(TracksService);
   constructor() {
-    this.trackService.getTracks().then((trackList: Observable<Song[]> ) => {   
-      trackList.subscribe((tracks: Song[]) => {
-        this.trackList = tracks;
-      });
-    });
-
   }
 
+  getTracks = () => {
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+         this.lat = pos.coords.latitude;
+         this.lng = pos.coords.longitude;
+         this.trackService.getTracks({lat: pos.coords.latitude, lon: pos.coords.longitude}).then((trackList: Observable<Song[]> ) => {   
+          trackList.subscribe((tracks: Song[]) => {
+            // console.log(tracks)
+            this.trackList = tracks;
+          });
+        });
 
 
+      });
+    } else {
+      console.log("Geolocation is not supported by this browser.");
+    }
+
+
+  }
 }
 

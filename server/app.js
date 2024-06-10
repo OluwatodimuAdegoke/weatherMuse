@@ -6,9 +6,10 @@ const {
   HarmCategory,
   HarmBlockThreshold,
 } = require("@google/generative-ai");
+const cors = require("cors");
 const express = require("express");
-var app = express();
-
+const app = express();
+app.use(cors());
 // Get the API keys
 const client_id = process.env.SPOTIFY_ID;
 const client_secret = process.env.SPOTIFY_SECRET;
@@ -55,19 +56,9 @@ const getAuth = async () => {
   }
 };
 
-const iplocation = require("iplocation").default;
-
-const getWeather = async () => {
+const getWeather = async (address) => {
   try {
-    // Get the ip and the location of the current user
-    let responseIp = await axios.get("https://api.ipify.org?format=json");
-    // responseIp = await iplocation(responseIp.data.ip);
-    responseIp = {
-      latitude: "9.756882",
-      longitude: "8.336738",
-    };
-    // Get the current weather
-    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${responseIp.latitude}&lon=${responseIp.longitude}&appid=${weather_api}`;
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${address["lat"]}&lon=${address["lon"]}&appid=${weather_api}`;
     const response = await axios.get(url);
     return response.data;
   } catch (error) {
@@ -75,6 +66,7 @@ const getWeather = async () => {
   }
 };
 
+// Change the weather data to suitable spotify parameters with Google's Gemini
 const changeWeatherToParam = async (input) => {
   const chatSession = model.startChat({
     generationConfig,
@@ -103,23 +95,7 @@ const changeWeatherToParam = async (input) => {
   return result.response.text();
 };
 
-const getAudioFeatures_Track = async (track_id) => {
-  const access_token = await getAuth();
-
-  const api_url = `https://api.spotify.com/v1/audio-features/${track_id}`;
-
-  try {
-    const response = await axios.get(api_url, {
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.log(error);
-  }
-};
-
+// Get the recommendations from spotify's API
 const getRecommendations = async (input) => {
   const access_token = await getAuth();
 
@@ -141,13 +117,9 @@ const getRecommendations = async (input) => {
   }
 };
 
-// getAudioFeatures_Track("07A0whlnYwfWfLQy4qh3Tq")
-//   .then((data) => console.log(data))
-//   .catch((error) => console.error(error));
-
-const connectData = async () => {
+const connectData = async (address) => {
   // Get the data from the weather API
-  const weatherData = await getWeather();
+  const weatherData = await getWeather(address);
   // Convert it to a string
   const jsonData =
     JSON.stringify(weatherData.weather) +
@@ -173,11 +145,15 @@ const connectData = async () => {
 
   return tracks;
 };
-// connectData();
+// app.get("/", (req, res) => {
+//   res.status(200).send(null);
+// });
+
 app.get("/tracks", async (req, res) => {
   try {
-    let value = await connectData();
-
+    const lat = req.query.lat;
+    const lon = req.query.lon;
+    let value = await connectData({ lat: lat, lon: lon });
     res.status(200).send(value);
   } catch (error) {
     res
@@ -185,7 +161,6 @@ app.get("/tracks", async (req, res) => {
       .send(error instanceof Error ? error.message : "Unknown error");
   }
 });
-// app.use(express.json());
 
 app.listen(3000, () => {
   console.log(`Server running at http://localhost:3000...`);

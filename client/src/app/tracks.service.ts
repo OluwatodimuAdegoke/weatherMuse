@@ -1,19 +1,19 @@
-import { Injectable } from '@angular/core';
-import { Weather } from './weather';
+import { Injectable, NgModule } from '@angular/core';
+import { Song } from './song';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
-export class TracksService {
-  url = 'http://localhost:3000/';
 
-  async getTracks(): Promise<Weather[]> {
-    const data = await fetch(this.url);
-    const jsonData = await data.json();
-    // console.log("Here");
-    // console.log("Also",data);
-    // console.log(jsonData);
-    return (jsonData) ;
+export class TracksService {
+  url = 'http://localhost:3000/tracks';
+
+
+  constructor(private http: HttpClient) { }
+  async getTracks(): Promise<Observable<Song[]>> {
+    return this.http.get<Song[]>(this.url);
   }
-  constructor() { }
+
 }

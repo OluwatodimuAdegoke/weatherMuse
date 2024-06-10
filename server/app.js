@@ -171,21 +171,21 @@ const connectData = async () => {
     });
   });
 
-  // console.log(tracks);
   return tracks;
 };
 // connectData();
-app.get("/", async (req, res) => {
+app.get("/tracks", async (req, res) => {
   try {
     let value = await connectData();
+
     res.status(200).send(value);
   } catch (error) {
-    console.error(error);
     res
       .status(500)
       .send(error instanceof Error ? error.message : "Unknown error");
   }
 });
+// app.use(express.json());
 
 app.listen(3000, () => {
   console.log(`Server running at http://localhost:3000...`);

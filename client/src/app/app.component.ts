@@ -41,8 +41,8 @@ import {FormBuilder, FormControl, FormGroup, ReactiveFormsModule} from '@angular
 export class AppComponent {
 
   trackList: Song[] = [];
-  lat: any;
-  lng: any;
+  lat: any = -1;
+  lng: any = -1;
 
   trackService: TracksService = inject(TracksService);
   constructor() {
@@ -51,18 +51,35 @@ export class AppComponent {
   getTracks = () => {
 
     if (navigator.geolocation) {
+    if(this.lat === -1 && this.lng === -1 ){
       navigator.geolocation.getCurrentPosition(pos => {
-         this.lat = pos.coords.latitude;
-         this.lng = pos.coords.longitude;
-         this.trackService.getTracks({lat: pos.coords.latitude, lon: pos.coords.longitude}).then((trackList: Observable<Song[]> ) => {   
-          trackList.subscribe((tracks: Song[]) => {
-            // console.log(tracks)
-            this.trackList = tracks;
-          });
+        this.lat = pos.coords.latitude;
+        this.lng = pos.coords.longitude;
+        console.log("Loading....")
+        this.trackService.getTracks({lat: pos.coords.latitude, lon: pos.coords.longitude}).then((trackList: Observable<Song[]> ) => {   
+         trackList.subscribe((tracks: Song[]) => {
+           // console.log(tracks)
+           this.trackList = tracks;
+         });
+       });
+
+
+     },
+     (error) => {},
+     {
+       enableHighAccuracy: true,
+       timeout: 5000,
+       maximumAge: 0
+     }
+   );
+    }else{
+      this.trackService.getTracks({lat: this.lat, lon: this.lng}).then((trackList: Observable<Song[]> ) => {   
+        trackList.subscribe((tracks: Song[]) => {
+          this.trackList = tracks;
         });
-
-
       });
+    }
+
     } else {
       console.log("Geolocation is not supported by this browser.");
     }

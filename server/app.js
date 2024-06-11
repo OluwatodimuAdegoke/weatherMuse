@@ -8,6 +8,7 @@ const {
 } = require("@google/generative-ai");
 const cors = require("cors");
 const express = require("express");
+const e = require("cors");
 const app = express();
 app.use(cors());
 // Get the API keys
@@ -18,7 +19,6 @@ const gemini_api = process.env.GEMINI_API;
 
 // Initiate Google Generative AI
 const genAI = new GoogleGenerativeAI(gemini_api);
-
 // AI Configurations
 const model = genAI.getGenerativeModel({
   model: "gemini-1.5-flash",
@@ -96,13 +96,15 @@ const changeWeatherToParam = async (input) => {
 };
 
 // Get the recommendations from spotify's API
-const getRecommendations = async (input) => {
+const getRecommendations = async (input, offset = 0) => {
   const access_token = await getAuth();
 
   const api_url = `https://api.spotify.com/v1/recommendations?`;
-  const limit = 10;
+  const limit = 5;
   const data = JSON.parse(input);
   data["limit"] = limit;
+  data["offset"] = offset;
+  console.log(offset);
   try {
     const response = await axios.get(api_url, {
       params: data,
@@ -126,7 +128,7 @@ const connectData = async (address) => {
     JSON.stringify(weatherData.main) +
     JSON.stringify(weatherData.wind) +
     JSON.stringify(weatherData.rain);
-  // Send it to Gemini and get the correct result
+
   const spotifyData = await changeWeatherToParam(jsonData);
 
   // Pass it to spotify and get the recommendations
@@ -145,14 +147,12 @@ const connectData = async (address) => {
 
   return tracks;
 };
-// app.get("/", (req, res) => {
-//   res.status(200).send(null);
-// });
 
 app.get("/tracks", async (req, res) => {
   try {
     const lat = req.query.lat;
     const lon = req.query.lon;
+
     let value = await connectData({ lat: lat, lon: lon });
     res.status(200).send(value);
   } catch (error) {

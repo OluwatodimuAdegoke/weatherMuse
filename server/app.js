@@ -1,11 +1,7 @@
 const qs = require("qs");
 require("dotenv").config();
 const axios = require("axios");
-const {
-  GoogleGenerativeAI,
-  HarmCategory,
-  HarmBlockThreshold,
-} = require("@google/generative-ai");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 const cors = require("cors");
 const express = require("express");
 const e = require("cors");
@@ -56,11 +52,24 @@ const getAuth = async () => {
   }
 };
 
+// Get the weather data from the API
+let weatherData = {};
 const getWeather = async (address) => {
   try {
-    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${address["lat"]}&lon=${address["lon"]}&appid=${weather_api}`;
-    const response = await axios.get(url);
-    return response.data;
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=${address["city"]}&appid=${weather_api}`;
+    if (
+      weatherData[address["city"]] &&
+      Date.now() - weatherData[address["city"]].time < 60000
+    ) {
+      return weatherData[address["city"]].data;
+    } else {
+      const response = await axios.get(url);
+      weatherData[address["city"]] = {};
+      weatherData[address["city"]].data = response.data;
+      console.log(response.data);
+      weatherData[address["city"]].time = Date.now();
+      return response.data;
+    }
   } catch (error) {
     console.log(error);
   }
@@ -100,7 +109,7 @@ const getRecommendations = async (input, offset = 0) => {
   const access_token = await getAuth();
 
   const api_url = `https://api.spotify.com/v1/recommendations?`;
-  const limit = 5;
+  const limit = 50;
   const data = JSON.parse(input);
   data["limit"] = limit;
   data["offset"] = offset;
@@ -139,7 +148,7 @@ const connectData = async (address) => {
         title: track.name,
         artist_name: track.artists[0].name,
         image_url: track.album.images[0].url,
-        song_uri: track.uri,
+        song_uri: track.preview_url,
         song_url: track.external_urls.spotify,
       });
     });
@@ -150,11 +159,31 @@ const connectData = async (address) => {
 
 app.get("/tracks", async (req, res) => {
   try {
-    const lat = req.query.lat;
-    const lon = req.query.lon;
+    if (!req.query.city) throw new Error("City is required");
+    const track = await connectData({ city: req.query.city });
+    res.status(200).send(track);
+  } catch (error) {
+    res
+      .status(500)
+      .send(error instanceof Error ? error.message : "Unknown error");
+  }
+});
 
-    let value = await connectData({ lat: lat, lon: lon });
-    res.status(200).send(value);
+app.get("/weather", async (req, res) => {
+  try {
+    if (!req.query.city) throw new Error("City is required");
+    const value = await getWeather({ city: req.query.city });
+    const weather = {
+      city: value.name,
+      country: value.sys.country,
+      temperature: value.main.temp - 273.15,
+      weather_main: value.weather[0].main,
+      weather_description: value.weather[0].description,
+      humidity: value.main.humidity,
+      pressure: value.main.pressure,
+      icon: value.weather[0].icon,
+    };
+    res.status(200).send(weather);
   } catch (error) {
     res
       .status(500)

@@ -5,6 +5,7 @@ import { Song } from './song';
 import { TracksService } from './tracks.service';
 import { Observable } from 'rxjs';
 import {FormBuilder, FormControl, FormGroup, ReactiveFormsModule} from '@angular/forms';
+import { Weather } from './weather';
 
 
 
@@ -15,8 +16,17 @@ import {FormBuilder, FormControl, FormGroup, ReactiveFormsModule} from '@angular
   template: `
   <section class="content">
     <div class="input">
-      <!-- <input #cityName type="text" placeholder="Current City" required> -->
-      <button type="submit"  (click)="getTracks()">Click Me</button>
+      <input #cityName type="text" placeholder="Current City" required>
+      <button type="submit"  (click)=" getTracks(cityName.value) ">Click Me</button>
+    </div>
+
+    <div *ngIf="weather">
+      <h1 class="city">City: {{weather.city}}</h1>
+      <h1 class="country">Country: {{weather.country}}</h1>
+      <h1 class="weather">Weather: {{weather.weather_main}}</h1>
+      <h1 class="description">Description: {{weather.weather_description}}</h1>
+      <h1 class="temp">Temperature: {{weather.temperature}}°C</h1>
+      <h1 class="humidity">Humidity: {{weather.humidity}}%</h1>
     </div>
 
   <div *ngFor="let track of trackList" class="track-list"> 
@@ -41,49 +51,27 @@ import {FormBuilder, FormControl, FormGroup, ReactiveFormsModule} from '@angular
 export class AppComponent {
 
   trackList: Song[] = [];
-  lat: any = -1;
-  lng: any = -1;
+  weather: Weather | undefined;
 
   trackService: TracksService = inject(TracksService);
   constructor() {
   }
 
-  getTracks = () => {
-
-    if (navigator.geolocation) {
-    if(this.lat === -1 && this.lng === -1 ){
-      navigator.geolocation.getCurrentPosition(pos => {
-        this.lat = pos.coords.latitude;
-        this.lng = pos.coords.longitude;
-        console.log("Loading....")
-        this.trackService.getTracks({lat: pos.coords.latitude, lon: pos.coords.longitude}).then((trackList: Observable<Song[]> ) => {   
-         trackList.subscribe((tracks: Song[]) => {
-           // console.log(tracks)
-           this.trackList = tracks;
-         });
-       });
-
-
-     },
-     (error) => {},
-     {
-       enableHighAccuracy: true,
-       timeout: 5000,
-       maximumAge: 0
-     }
-   );
-    }else{
-      this.trackService.getTracks({lat: this.lat, lon: this.lng}).then((trackList: Observable<Song[]> ) => {   
-        trackList.subscribe((tracks: Song[]) => {
-          this.trackList = tracks;
-        });
-      });
-    }
-
-    } else {
-      console.log("Geolocation is not supported by this browser.");
-    }
-
+  getTracks = (city: String) => {
+    this.trackService.getTracks({city: city}).then((trackList: Observable<Song[]>) => {
+      trackList.subscribe((tracks: Song[]) => {
+        this.trackList = tracks;
+      })
+    }).then(() => {
+      this.trackService.getWeather({city: city}).then((weather: Observable<Weather>) => {
+        weather.subscribe((weather: Weather) => {
+          this.weather = weather;
+        })
+      })
+    }).catch((error) => {
+      console.log(error);
+      return;
+    })
 
   }
 }

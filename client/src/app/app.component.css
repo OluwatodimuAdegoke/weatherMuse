@@ -6,27 +6,64 @@
         align-items: center;
         padding: 50px;
     }
+    .header{
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .weather-div{
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(to right, rgba(218, 165, 32, 0.5), rgba(255, 255, 255, 0.5));
+      padding: 10px;
+      border-radius: 10px;
+      border-width: 2px;
+      min-width: 250px;
+      max-height: 100px;
+      font-size: smaller;
+      line-height: 1;
+      justify-items: center;
+    }
+    .icon-div{
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+      justify-content: space-between;
+    }
+
+    .input{
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+      max-height: 40px;
+    }
+    input{
+      border-radius: 5px;
+      border-width: 1px;
+      border-color: bisque;
+    }
     button {
-        display: flex;
-      background-color: #3f51b5;
+      display: flex;
+      height: 40px;
+      background-color: antiquewhite;
       color: white;
       padding: 10px 15px;
       border: none;
       border-radius: 10px;
       cursor: pointer;
       align-self: center;
+      align-items: center;
     }
     button:hover {
       background-color: #303f9f;
     }
-    .input{
+
+    .details{
+      align-items: center;
       display: flex;
-      flex-direction: row;
-      margin-bottom: 10px;
-      gap: 10px;
-    }
-    input{
-      border-radius: 5px;
+      justify-content: center;
     }
   .track-image {
     height: 100px;

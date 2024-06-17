@@ -173,6 +173,7 @@ app.get("/weather", async (req, res) => {
   try {
     if (!req.query.city) throw new Error("City is required");
     const value = await getWeather({ city: req.query.city });
+
     const weather = {
       city: value.name,
       country: value.sys.country,

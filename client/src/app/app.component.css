@@ -5,10 +5,11 @@
         color: #303f9f;
         align-items: center;
         padding: 50px;
+  
     }
     .header{
       display: flex;
-      flex-direction: row;
+      flex-direction: column;
       align-items: center;
       gap: 10px;
     }
@@ -16,7 +17,7 @@
     .weather-div{
       display: flex;
       flex-direction: column;
-      background: linear-gradient(to right, rgba(218, 165, 32, 0.5), rgba(255, 255, 255, 0.5));
+      background-color: lightsalmon;
       padding: 10px;
       border-radius: 10px;
       border-width: 2px;
@@ -25,6 +26,7 @@
       font-size: smaller;
       line-height: 1;
       justify-items: center;
+      margin-bottom: 10px;
     }
     .icon-div{
       display: flex;
@@ -61,10 +63,12 @@
     }
 
     .details{
-      align-items: center;
+      align-items: start;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
+      justify-content: start;
     }
+
   .track-image {
     height: 100px;
     width: 100px;
@@ -74,11 +78,12 @@
   .track-div {
     background-color: #f5f5f5;
     display: flex;
-    flex-direction: row;
-    width: 500px;
+    flex-direction: row; /* Changed to column for vertical layout inside each track */
     gap: 10px;
-    border-radius: 20px 20px 20px 20px ;
+    padding: 10px; /* Added padding for some inner spacing */
+    border-radius: 10px; /* Optional: Adds rounded corners */
   }
+
   .track-list{
     margin-bottom: 20px;
   }
@@ -86,6 +91,7 @@
     font-size: medium;
     color: darkgrey;
     font-weight: bold;
+    font-size: smaller;
   }
   .artists{
     font-size: small;

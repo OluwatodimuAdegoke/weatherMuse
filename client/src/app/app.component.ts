@@ -15,17 +15,15 @@ import { Weather } from './weather';
   imports: [  CommonModule , ReactiveFormsModule],
   template: `
   <section class="content">
-
+    <p style="font-size: xx-large; font-weight: 900; color: black;">Weather Muse</p>
     <div class="header">
       <div class="input">
         <input #cityName type="text" placeholder="Current City" required>
         <button type="submit"  (click)=" getTracks(cityName.value) ">Click Me</button>
       </div>
 
+
       <div *ngIf="weather" class="weather-div">
-      
-        <p class="city">{{weather.city}}, {{weather.country}}</p>
-    
         <div class="icon-div">
           <div>
             <img class="weather-icon" [src]="'http://openweathermap.org/img/wn/' + weather.icon + '.png'" alt="Weather Icon" >
@@ -34,25 +32,29 @@ import { Weather } from './weather';
           <div>
             <p class="weather">{{weather.weather_main}}</p>
             <p class="description">{{weather.weather_description}}</p>
+            <p class="city">{{weather.city}}, {{weather.country}}</p>
+    
           </div>
         </div>
       </div>
+
     </div>
 
 
 
-
-  <div *ngFor="let track of trackList" class="track-list"> 
-    <a [href]="track.song_url" >
-        <div class="track-div">
-      <img class="track-image" [src]="track.image_url" alt="Image Url" >
-      <div class="details">
-        <h2 class="title">{{track.title}}</h2>
-        <p class="artists">Artist: {{track.artist_name}}</p>
-      </div>
-      </div>
-    </a>
-</div>
+  <div class="tracks">
+    <div *ngFor="let track of trackList" class="track-list"> 
+      <a [href]="track.song_url" >
+          <div class="track-div">
+            <img class="track-image" [src]="track.image_url" alt="Image Url" >
+            <div class="details">
+              <h2 class="title">{{track.title}}</h2>
+              <p class="artists">Artist: {{track.artist_name}}</p>
+            </div>
+          </div>
+      </a>
+    </div>
+  </div>
 
 <div *ngIf="errorMessage" class="error-message">
   {{ errorMessage }}
@@ -85,7 +87,6 @@ export class AppComponent {
           this.weather = weather;
         },
         error: (error) => {
-          console.log(error);
           this.errorMessage = error.message || 'An unknown error occurred';
         },
         complete: async () => {
@@ -99,6 +100,7 @@ export class AppComponent {
                   this.errorMessage = error.message || 'An unknown error occurred';
                 },
                 complete: () => {
+                  this.errorMessage = '';
                   console.log('Tracks fetched');
                 }
               }

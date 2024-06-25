@@ -3,7 +3,7 @@ import {CommonModule} from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { Song } from './song';
 import { TracksService } from './tracks.service';
-import { Observable } from 'rxjs';
+import { firstValueFrom, Observable } from 'rxjs';
 import {FormBuilder, FormControl, FormGroup, ReactiveFormsModule} from '@angular/forms';
 import { Weather } from './weather';
 
@@ -15,6 +15,7 @@ import { Weather } from './weather';
   imports: [  CommonModule , ReactiveFormsModule],
   template: `
   <section class="content">
+
     <div class="header">
       <div class="input">
         <input #cityName type="text" placeholder="Current City" required>
@@ -53,6 +54,10 @@ import { Weather } from './weather';
     </a>
 </div>
 
+<div *ngIf="errorMessage" class="error-message">
+  {{ errorMessage }}
+</div>
+
   </section>
 
  
@@ -69,22 +74,45 @@ export class AppComponent {
   constructor() {
   }
 
-  getTracks = (city: String) => {
-    this.trackService.getTracks({city: city}).then((trackList: Observable<Song[]>) => {
-      trackList.subscribe((tracks: Song[]) => {
-        this.trackList = tracks;
-      })
-    }).then(() => {
-      this.trackService.getWeather({city: city}).then((weather: Observable<Weather>) => {
-        weather.subscribe((weather: Weather) => {
+  errorMessage: string = ''; // Property to store error message
+
+
+
+  async getTracks(city: String) {
+    (await this.trackService.getWeather({city: city})).subscribe(
+      {
+        next: (weather) => {
           this.weather = weather;
-        })
-      })
-    }).catch((error) => {
-      console.log(error);
-      return;
-    })
+        },
+        error: (error) => {
+          console.log(error);
+          this.errorMessage = error.message || 'An unknown error occurred';
+        },
+        complete: async () => {
+          if(this.weather?.city){
+            (await (this.trackService.getTracks({city: city}))).subscribe(
+              {
+                next: (tracks: Song[]) => {
+                  this.trackList = tracks;
+                },
+                error: (error: { message: string; }) => {
+                  this.errorMessage = error.message || 'An unknown error occurred';
+                },
+                complete: () => {
+                  console.log('Tracks fetched');
+                }
+              }
+            )
+          
+          }
+        }
+      }
+    )
 
   }
-}
+
+
+
+  }
+
 

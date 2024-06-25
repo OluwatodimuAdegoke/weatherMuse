@@ -48,7 +48,7 @@ const getAuth = async () => {
     });
     return response.data.access_token;
   } catch (error) {
-    console.log(error);
+    throw Error("Failed to get access token");
   }
 };
 
@@ -71,7 +71,13 @@ const getWeather = async (address) => {
       return response.data;
     }
   } catch (error) {
-    console.log(error);
+    if (error.response.data["cod"] === "404") {
+      throw Error("City not found", error.response.data);
+    } else if (error.response.data["cod"] === "401") {
+      throw Error("Invalid API key", error.response.data);
+    } else {
+      throw Error("Failed to fetch weather data", error.response.data);
+    }
   }
 };
 
@@ -100,7 +106,6 @@ const changeWeatherToParam = async (input) => {
   });
 
   const result = await chatSession.sendMessage(input);
-  // console.log(result.response.text());
   return result.response.text();
 };
 
@@ -124,60 +129,62 @@ const getRecommendations = async (input, offset = 0) => {
     });
     return response.data;
   } catch (error) {
-    console.log(error);
+    throw Error("Failed to get recommendations", error.response.data);
   }
-};
-
-const connectData = async (address) => {
-  // Get the data from the weather API
-  const weatherData = await getWeather(address);
-  // Convert it to a string
-  const jsonData =
-    JSON.stringify(weatherData.weather) +
-    JSON.stringify(weatherData.main) +
-    JSON.stringify(weatherData.wind) +
-    JSON.stringify(weatherData.rain);
-
-  const spotifyData = await changeWeatherToParam(jsonData);
-
-  // Pass it to spotify and get the recommendations
-  let tracks = [];
-  await getRecommendations(spotifyData).then((data) => {
-    data.tracks.forEach((track) => {
-      tracks.push({
-        title: track.name,
-        artist_name: track.artists[0].name,
-        image_url: track.album.images[0].url,
-        song_uri: track.preview_url,
-        song_url: track.external_urls.spotify,
-      });
-    });
-  });
-
-  return tracks;
 };
 
 app.get("/tracks", async (req, res) => {
   try {
     if (!req.query.city) throw new Error("City is required");
-    const track = await connectData({ city: req.query.city });
-    res.status(200).send(track);
+
+    // Get the weather data
+    const weatherData = await getWeather({ city: req.query.city });
+    // Conver to string
+    const jsonData =
+      JSON.stringify(weatherData.weather) +
+      JSON.stringify(weatherData.main) +
+      JSON.stringify(weatherData.wind) +
+      JSON.stringify(weatherData.rain);
+
+    // Convert to suitable spotify parameters
+    const spotifyData = await changeWeatherToParam(jsonData);
+
+    // Get the recommendations
+    let tracks = [];
+    await getRecommendations(spotifyData).then((data) => {
+      data.tracks.forEach((track) => {
+        tracks.push({
+          title: track.name,
+          artist_name: track.artists[0].name,
+          image_url: track.album.images[0].url,
+          song_uri: track.preview_url,
+          song_url: track.external_urls.spotify,
+        });
+      });
+    });
+
+    res.status(200).send(tracks);
   } catch (error) {
-    res
-      .status(500)
-      .send(error instanceof Error ? error.message : "Unknown error");
+    console.log("Tracks", error);
+    res.status(500).json({
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
   }
 });
 
 app.get("/weather", async (req, res) => {
   try {
-    if (!req.query.city) throw new Error("City is required");
+    console.log(req.query.city);
+    if (!req.query.city) {
+      throw new Error("City is required");
+    }
+
     const value = await getWeather({ city: req.query.city });
 
     const weather = {
       city: value.name,
       country: value.sys.country,
-      temperature: value.main.temp - 273.15,
+      temperature: value.main.temp - 273.15, // Convert Kelvin to Celsius
       weather_main: value.weather[0].main,
       weather_description: value.weather[0].description,
       humidity: value.main.humidity,
@@ -186,9 +193,10 @@ app.get("/weather", async (req, res) => {
     };
     res.status(200).send(weather);
   } catch (error) {
-    res
-      .status(500)
-      .send(error instanceof Error ? error.message : "Unknown error");
+    console.log("Weather", error.message);
+    res.status(500).json({
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
   }
 });
 
